@@ -57,6 +57,7 @@ No. This plugin only concerns itself with comments.
 == Screenshots ==
 
 1. All options are easily configurable via a settings page.
+2. Debug log shows comment data, $_POST data, $_COOKIE data, and the results of each enabled Sock'Em SPAMbots test.
 
 == Changelog ==
 
