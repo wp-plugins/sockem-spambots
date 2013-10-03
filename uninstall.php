@@ -13,6 +13,10 @@
 if (!defined('WP_UNINSTALL_PLUGIN'))
 	exit ();
 
+//remove the debug log
+if(file_exists(dirname(__FILE__) . '/sockem_debug.log'))
+	@unlink(dirname(__FILE__) . '/sockem_debug.log');
+
 //remove options
 delete_option('sockem_options');
 

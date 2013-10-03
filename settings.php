@@ -41,8 +41,32 @@ if(getenv("REQUEST_METHOD") === 'POST')
 		echo '<div class="error fade"><p>Sorry the form had expired.  Please try again.</p></div>';
 	else
 	{
+		//we might have something to do to the debug log...
+		if(file_exists($sockem_options['debug_log']))
+		{
+			//if debugging is disabled, we need to delete the file
+			if(!array_key_exists('sockem_debug', $_POST) || intval($_POST['sockem_debug']) !== 1)
+			{
+				if(false === @unlink($sockem_options['debug_log']))
+					echo '<div class="error fade"><p>The Sock\'Em SPAMbots debug log could not be deleted.  Please manually remove <code>' . esc_html($sockem_options['debug_log']) . '</code></p></div>';
+				else
+					echo '<div class="updated fade"><p>The Sock\'Em SPAMbots debug log has been removed.</p></div>';
+			}
+			//otherwise if the user opted to empty the file, we need to try to do that
+			elseif(array_key_exists('sockem_empty_debug_log', $_POST) && intval($_POST['sockem_empty_debug_log']) === 1)
+			{
+				if(false === @file_put_contents($sockem_options['debug_log'], ''))
+					echo '<div class="error fade"><p>The Sock\'Em SPAMbots debug log could not be emptied.  Please make sure the server is allowed to write changes to it.</p></div>';
+				else
+					echo '<div class="updated fade"><p>The Sock\'Em SPAMbots debug log has been emptied.</p></div>';
+			}
+		}
+		//if debugging is enabled, let's make sure we can write to the file
+		elseif(array_key_exists('sockem_debug', $_POST) && intval($_POST['sockem_debug']) === 1 && false === @file_put_contents($sockem_options['debug_log'], ''))
+			echo '<div class="error fade"><p>The Sock\'Em SPAMbots log could not be created.  Please make sure the server is allowed to write changes to ' . esc_html($sockem_options['debug_log']) . '</p></div>';
+
 		//sanitize the results (there isn't really anything to validate)
-		foreach(array('test_js','test_cookie','test_filler') AS $key)
+		foreach(array('test_js','test_cookie','test_filler','test_speed','disable_trackbacks','disable_pingbacks','debug') AS $key)
 			$sockem_options[$key] = array_key_exists("sockem_$key", $_POST) && intval($_POST["sockem_$key"]) === 1;
 
 		//save for later
@@ -78,6 +102,26 @@ if(getenv("REQUEST_METHOD") === 'POST')
 
 		<div class="inner-sidebar">
 
+			<!-- Debug -->
+			<div class="postbox">
+				<h3 class="hndle">Debugging</h3>
+				<div class="inside">
+					<p><label for="sockem_debug"><input type="checkbox" id="sockem_debug" name="sockem_debug" value="1" <?php echo ($sockem_options['debug'] === true ? 'checked=checked' : ''); ?> /> Enable debugging</label><br>
+					<span class="description">Comment details and Sock'Em test results will be logged to <code><?php echo esc_html($sockem_options['debug_log']); ?></code>.  This can be useful if you want to make sure the plugin is working correctly, but you should not leave debugging enabled indefinitely.</span></p>
+
+					<div class="sockem-debug-options" style="display: <?php echo ($sockem_options['debug'] === true ? 'block' : 'none'); ?>">
+					<?php
+					//if the log exists, let's present some options
+					if(file_exists($sockem_options['debug_log']))
+					{
+						echo '<p><label for="sockem_empty_debug_log"><input type="checkbox" id="sockem_empty_debug_log" name="sockem_empty_debug_log" value="1" /> Empty log</label><br>
+						<span class="description">Click <a href="' . esc_url(plugins_url('sockem_debug.log', __FILE__)) . '" title="View debug log" target="_blank">here</a> to view the log</span></p>';
+					}
+					?>
+					</div>
+				</div>
+			</div><!--.postbox-->
+
 			<!-- About Us -->
 			<div class="postbox">
 				<div class="inside">
@@ -109,8 +153,11 @@ if(getenv("REQUEST_METHOD") === 'POST')
 							<p><label for="sockem_test_cookie"><input type="checkbox" name="sockem_test_cookie" id="sockem_test_cookie" value="1" <?php echo ($sockem_options['test_cookie'] === true ? 'checked=checked' : ''); ?> /> Require Cookies</label><br>
 							<span class="description">A tiny cookie <a href="http://en.wikipedia.org/wiki/HTTP_cookie" title="Wikipedia entry: HTTP cookie" target="_blank">[?]</a> is set when the comment form is loaded, and verified when the comment form is submitted.  If a SPAMbot does not support cookies or does not bother visiting the comment page, the comment submission will fail.</span></p>
 
-							<p><label for="sockem_test_filler"><input type="checkbox" name="sockem_test_filler" id="sockem_test_filler" value="1" <?php echo ($sockem_options['test_filler'] === true ? 'checked=checked' : ''); ?> /> Invisible Field</label><br>
+							<p><label for="sockem_test_filler"><input type="checkbox" name="sockem_test_filler" id="sockem_test_filler" value="1" <?php echo ($sockem_options['test_filler'] === true ? 'checked=checked' : ''); ?> /> Honeypot</label><br>
 							<span class="description">An invisible text field is added to comment forms.  Generic formbots will try to populate the field anyway, and by doing so, their comments will be rejected.</span></p>
+
+							<p><label for="sockem_test_speed"><input type="checkbox" name="sockem_test_speed" id="sockem_test_speed" value="1" <?php echo ($sockem_options['test_speed'] === true ? 'checked=checked' : ''); ?> /> Haste Makes SPAM</label><br>
+							<span class="description">Human beings will take a few seconds, at the very least, to fill out and submit a comment form.  This test will reject comments submitted in 5 seconds or less from the time the page was generated.</span></p>
 						</blockquote>
 					</div>
 				</div><!--.postbox-->
@@ -122,10 +169,10 @@ if(getenv("REQUEST_METHOD") === 'POST')
 						<p>Some kinds of comments are actually supposed to come from robots, though their usefulness is questionable.</p>
 
 						<blockquote>
-							<p><label for="sockem_disable_trackbacks"><input type="checkbox" name="sockem_disable_trackbacks" id="sockem_disable_trackbacks" value="1" <?php echo ($sockem_options['sockem_disable_trackbacks'] === true ? 'checked=checked' : ''); ?> /> Disable Trackbacks</label><br>
+							<p><label for="sockem_disable_trackbacks"><input type="checkbox" name="sockem_disable_trackbacks" id="sockem_disable_trackbacks" value="1" <?php echo ($sockem_options['disable_trackbacks'] === true ? 'checked=checked' : ''); ?> /> Disable Trackbacks</label><br>
 							<span class="description">Trackbacks <a href="http://en.wikipedia.org/wiki/Trackbacks" title="Wikipedia entry: Trackbacks" target="_blank">[?]</a> are intended to provide a means for authors to keep track of who links to their posts, but more often than not this system is used to send SPAM that bypasses the usual safeguards (e.g. those sexy options above).  Keep them if you want them, but this feature is mostly used for evil.</span></p>
 
-							<p><label for="sockem_disable_pingbacks"><input type="checkbox" name="sockem_disable_pingbacks" id="sockem_disable_pingbacks" value="1" <?php echo ($sockem_options['sockem_disable_pingbacks'] === true ? 'checked=checked' : ''); ?> /> Disable Pingbacks</label><br>
+							<p><label for="sockem_disable_pingbacks"><input type="checkbox" name="sockem_disable_pingbacks" id="sockem_disable_pingbacks" value="1" <?php echo ($sockem_options['disable_pingbacks'] === true ? 'checked=checked' : ''); ?> /> Disable Pingbacks</label><br>
 							<span class="description">Pingbacks <a href="http://en.wikipedia.org/wiki/Pingback" title="Wikipedia entry: Pingbacks" target="_blank">[?]</a> are similar to Trackbacks in that their purpose is to notify authors of links to their posts, however there is at least a degree of authentication, so they are not as frequently abused.  If you wanted to keep one kind of automated comment enabled, keep pingbacks.</span></p>
 
 						</blockquote>
@@ -141,3 +188,19 @@ if(getenv("REQUEST_METHOD") === 'POST')
 
 	</div><!-- /metabox-holder has-right-sidebar -->
 </div><!-- /wrap -->
+
+<script>
+
+//-------------------------------------------------
+// Toggle visibility of debug options based on the
+// status of debugging itself
+jQuery('#sockem_debug').click(function(){
+
+	if(jQuery(this).prop('checked'))
+		jQuery('.sockem-debug-options').css({display:'block'});
+	else
+		jQuery('.sockem-debug-options').css({display:'none'});
+
+});
+
+</script>

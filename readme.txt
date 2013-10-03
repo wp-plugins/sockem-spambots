@@ -16,7 +16,8 @@ CAPTCHA fields inhibit both human and robot participation in important kitty-rel
 
   * Javascript: require basic Javascript support, and in the process prove the user visited the actual comment form (instead of just submitting straight to WP).
   * Cookies: require basic cookie support, and again, prove the user visited the site before submitting a comment.
-  * Invisible field: generic formbots will often populate all form fields with gibberish, so we can assume that if text is added to an invisible field, something robotic is happening!
+  * Honeypot: generic formbots will often populate all form fields with gibberish, so we can assume that if text is added to an invisible field, something robotic is happening!
+  * Speed: automated scripts complete comment forms with inhuman speed, thus if submissions happen really quickly, we can assume it is a robot doing the submitting!
   * Disable trackbacks or pingbacks independently of one another.
 
 This plugin is in BETA.  It does what it is supposed to on our servers, but in the wild it may behave... wildly!  Please let us know if you experience any issues!
@@ -49,16 +50,29 @@ WordPress lumps the two together.  We've separated them so you can be more selec
 
 WordPress continues doing whatever it would normally do with the comment based on your settings and any other relevant plugins you have installed (e.g. Akismet).
 
+= Does Sock'Em SPAMbots protect against SPAM registrations? =
+
+No. This plugin only concerns itself with comments.
+
 == Screenshots ==
 
 1. All options are easily configurable via a settings page.
 
 == Changelog ==
 
+= 0.6.0 =
+* Added speed test;
+* Added debug logging;
+* Cookie test is now site-specific;
+* Fixed bug preventing custom trackback and pingback choices;
+
 = 0.5.0 =
 * Sock'Em SPAMbots is born!
 
 == Upgrade Notice ==
+
+= 0.6.0 =
+Additional tests and bug fixes; everyone is encouraged to upgrade.
 
 = 0.5.0 =
 Initial release.
