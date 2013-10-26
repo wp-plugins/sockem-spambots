@@ -25,6 +25,7 @@ elseif(!current_user_can('manage_options'))
 // Basic variables we'll be needing...
 
 $sockem_options = sockem_get_option();
+$statuses = array('open','closed');
 
 
 
@@ -65,8 +66,27 @@ if(getenv("REQUEST_METHOD") === 'POST')
 		elseif(array_key_exists('sockem_debug', $_POST) && intval($_POST['sockem_debug']) === 1 && false === @file_put_contents($sockem_options['debug_log'], ''))
 			echo '<div class="error fade"><p>The Sock\'Em SPAMbots log could not be created.  Please make sure the server is allowed to write changes to ' . esc_html($sockem_options['debug_log']) . '</p></div>';
 
+		//are we updating comment or ping statuses?
+		//since $statuses only contains "open" and "closed", we don't need to escape these strings
+		$tmp = array();
+		if(array_key_exists('sockem_comment_status', $_POST) && in_array($_POST['sockem_comment_status'], $statuses))
+			$tmp['comment_status'] = "`comment_status`='{$_POST['sockem_comment_status']}'";
+		if(array_key_exists('sockem_ping_status', $_POST) && in_array($_POST['sockem_ping_status'], $statuses))
+			$tmp['ping_status'] = "`ping_status`='{$_POST['sockem_ping_status']}'";
+		//we are indeed!
+		if(count($tmp))
+		{
+			//update the database
+			global $wpdb;
+			$wpdb->query("UPDATE `{$wpdb->prefix}posts` SET " . implode(', ', $tmp));
+
+			//and print a success message
+			foreach($tmp AS $k=>$v)
+				echo '<div class="updated fade"><p>The ' . str_replace('_', ' ', $k) . "es of your existing posts have been set to {$_POST['sockem_' . $k]}.</p></div>";
+		}
+
 		//sanitize the results (there isn't really anything to validate)
-		foreach(array('test_js','test_cookie','test_filler','test_speed','disable_trackbacks','disable_pingbacks','debug') AS $key)
+		foreach(array('test_js','test_cookie','test_filler','test_speed','disable_trackbacks','disable_pingbacks','debug','exempt_users') AS $key)
 			$sockem_options[$key] = array_key_exists("sockem_$key", $_POST) && intval($_POST["sockem_$key"]) === 1;
 
 		//save for later
@@ -75,6 +95,18 @@ if(getenv("REQUEST_METHOD") === 'POST')
 		echo '<div class="updated fade"><p>Sock\'Em SPAMbots\' settings have been successfully saved.</p></div>';
 	}
 }
+
+
+
+//-------------------------------------------------
+// Warn about unprotected plugins
+
+//bbpress
+if(is_plugin_active('bbpress/bbpress.php'))
+	echo '<div class="error fade"><p>Warning: bbPress forum posts are outside the purview of this plugin; Sock\'Em SPAMbots only helps protect against SPAM in regular comments.</p></div>';
+//buddy press
+if(is_plugin_active('buddypress/bp-loader.php'))
+	echo '<div class="error fade"><p>Warning: BuddyPress has its own commenting system outside the purview of this plugin; Sock\'Em SPAMbots only helps protect against SPAM in regular comments.</p></div>';
 
 
 
@@ -122,6 +154,24 @@ if(getenv("REQUEST_METHOD") === 'POST')
 				</div>
 			</div><!--.postbox-->
 
+			<!-- mass update -->
+			<div class="postbox">
+				<h3 class="hndle">Mass Update</h3>
+				<div class="inside">
+					<p><select name="sockem_comment_status" id="sockem_comment_status"><option value=""> --- </option><?php
+					foreach($statuses AS $s)
+						echo "<option value=\"$s\">$s</option>";
+					?></select><label for="sockem_comment_status"> Comment Status</label></p>
+
+					<p><select name="sockem_ping_status" id="sockem_ping_status"><option value=""> --- </option><?php
+					foreach($statuses AS $s)
+						echo "<option value=\"$s\">$s</option>";
+					?></select><label for="sockem_ping_status"> Ping Status</label></p>
+
+					<p class="description">Changes to your blog's comment settings don't always apply retroactively.  The above options allow you to update the per-post settings for all existing posts (irrespective of post type).</p>
+				</div>
+			</div><!--.postbox-->
+
 			<!-- About Us -->
 			<div class="postbox">
 				<div class="inside">
@@ -142,11 +192,14 @@ if(getenv("REQUEST_METHOD") === 'POST')
 
 				<!-- comment validation methods -->
 				<div class="postbox">
-					<h3 class="hndle">User Comment Validation Methods</h3>
+					<h3 class="hndle">Comment Validation Methods</h3>
 					<div class="inside">
 						<p>SPAMbots are usually simple, lightweight, automated scripts, lacking robust features (and common decency).  The following modifications to the comment process can help trip them up <strong><em>without</em></strong> interfering with your human visitors at all.</p>
 
 						<blockquote>
+							<p><label for="sockem_exempt_users"><input type="checkbox" name="sockem_exempt_users" id="sockem_exempt_users" value="1" <?php echo ($sockem_options['exempt_users'] === true ? 'checked=checked' : '') ?> /> Trust Authenticated Users</label><br>
+							<span class="description">Unless you have a SPAM registration problem (which is a whole other pickle), you can probably assume that any user who has successfully logged into WordPress is human, and exempt them from the other tests.</span></p>
+
 							<p><label for="sockem_test_js"><input type="checkbox" name="sockem_test_js" id="sockem_test_js" value="1" <?php echo ($sockem_options['test_js'] === true ? 'checked=checked' : ''); ?> /> Require Javascript</label><br>
 							<span class="description">A small piece of Javascript code is run on comment pages, adding an extra field to submissions.  If a SPAMbot does not support Javascript or does not bother visiting the actual comment page, the comment submission will fail.</span></p>
 

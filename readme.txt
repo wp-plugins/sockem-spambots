@@ -20,8 +20,6 @@ CAPTCHA fields inhibit both human and robot participation in important kitty-rel
   * Speed: automated scripts complete comment forms with inhuman speed, thus if submissions happen really quickly, we can assume it is a robot doing the submitting!
   * Disable trackbacks or pingbacks independently of one another.
 
-This plugin is in BETA.  It does what it is supposed to on our servers, but in the wild it may behave... wildly!  Please let us know if you experience any issues!
-
 == Installation ==
 
 1. Unzip the archive and upload the entire `sockem-spambots` directory to your `/wp-content/plugins/` directory.
@@ -54,12 +52,21 @@ WordPress continues doing whatever it would normally do with the comment based o
 
 No. This plugin only concerns itself with comments.
 
+= Does Sock'Em SPAMbots protect against SPAM bbPress or BuddyPress posts and comments? =
+
+No. This plugin only concerns itself with regular WordPress comments.
+
 == Screenshots ==
 
 1. All options are easily configurable via a settings page.
 2. Debug log shows comment data, $_POST data, $_COOKIE data, and the results of each enabled Sock'Em SPAMbots test.
 
 == Changelog ==
+
+= 0.7.0 =
+* Ability to exempt authenticated users from tests;
+* Update per-post comment and ping statuses en masse;
+* Warn administrators if bbPress or BuddyPress are installed;
 
 = 0.6.0 =
 * Added speed test;
@@ -71,6 +78,9 @@ No. This plugin only concerns itself with comments.
 * Sock'Em SPAMbots is born!
 
 == Upgrade Notice ==
+
+= 0.7.0 =
+New features and a small bug fix.
 
 = 0.6.0 =
 Additional tests and bug fixes; everyone is encouraged to upgrade.

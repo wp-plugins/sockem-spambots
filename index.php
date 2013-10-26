@@ -3,7 +3,7 @@
 Plugin Name: Sock'Em SPAMbots
 Plugin URI: http://wordpress.org/extend/plugins/sockem-spambots/
 Description: A seamless approach to deflecting the vast majority of SPAM comments.
-Version: 0.6.0
+Version: 0.7.0
 Author: Blobfolio, LLC
 Author URI: http://www.blobfolio.com/
 License: GPLv2 or later
@@ -58,6 +58,7 @@ function sockem_get_option($option=null, $refresh=false){
 								 'test_filler'=>true,									//require leaving this field empty to submit comment
 								 'test_speed'=>true,									//test speediness
 								 'test_speed_seconds'=>5,								//the number of seconds to use for submissions
+								 'exempt_users'=>true,									//exempt logged-in users from tests
 								 'salt'=>sockem_make_salt(),							//a salt used to make hashes less predictable one site to the next
 								 'algo'=>'sha512',										//the hasing algorithm to use
 								 'disable_trackbacks'=>true,							//whether to disable trackback support
@@ -304,6 +305,10 @@ function sockem_comment_form($post_id=0){
 	//read the options
 	$sockem_options = sockem_get_option();
 
+	//if we can trust the user, leave!
+	if($sockem_options['exempt_users'] === true && is_user_logged_in())
+		return true;
+
 	//store output so we can release it in one go
 	ob_start();
 
@@ -318,8 +323,6 @@ function sockem_comment_form($post_id=0){
 	//speed test?
 	if($sockem_options['test_speed'] === true)
 		echo "\n" . '<input type="hidden" name="sockem_speed" value="' . esc_attr(sockem_make_speed_hash()) . '" />';
-
-	echo COOKIE_DOMAIN;
 
 	//echo the modifications, if any
 	echo ob_get_clean();
@@ -371,6 +374,17 @@ function sockem_comment_form_validation($commentdata){
 	//validation for regular comments
 	if(!strlen($commentdata['comment_type']))
 	{
+		//if we can trust the user, leave!
+		if($sockem_options['exempt_users'] === true && is_user_logged_in())
+		{
+			//log this exemption, if applicable
+			if($sockem_options['debug'] === true)
+				sockem_debug_log($commentdata, array('[PASS] Logged in users are exempt from tests.'));
+
+			//and leave!
+			return $commentdata;
+		}
+
 		//javascript required: make sure the field is present and correct
 		if($sockem_options['test_js'] === true)
 		{
