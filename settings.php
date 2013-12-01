@@ -86,7 +86,7 @@ if(getenv("REQUEST_METHOD") === 'POST')
 		}
 
 		//sanitize the results (there isn't really anything to validate)
-		foreach(array('test_js','test_cookie','test_filler','test_speed','disable_trackbacks','disable_pingbacks','debug','exempt_users') AS $key)
+		foreach(array('test_js','test_cookie','test_filler','test_speed','test_links','disable_trackbacks','disable_pingbacks','debug','exempt_users') AS $key)
 			$sockem_options[$key] = array_key_exists("sockem_$key", $_POST) && intval($_POST["sockem_$key"]) === 1;
 
 		//save for later
@@ -122,6 +122,7 @@ if(is_plugin_active('buddypress/bp-loader.php'))
 		height: auto;
 	}
 </style>
+
 
 <div class="wrap">
 
@@ -211,6 +212,9 @@ if(is_plugin_active('buddypress/bp-loader.php'))
 
 							<p><label for="sockem_test_speed"><input type="checkbox" name="sockem_test_speed" id="sockem_test_speed" value="1" <?php echo ($sockem_options['test_speed'] === true ? 'checked=checked' : ''); ?> /> Haste Makes SPAM</label><br>
 							<span class="description">Human beings will take a few seconds, at the very least, to fill out and submit a comment form.  This test will reject comments submitted in 5 seconds or less from the time the page was generated.</span></p>
+
+							<p><label for="sockem_test_links"><input type="checkbox" name="sockem_test_links" id="sockem_test_links" value="1" <?php echo ($sockem_options['test_links'] === true ? 'checked=checked' : ''); ?> /> Excessive Links</label><br>
+							<span class="description">SPAM comments frequently contain a gratuitous number of links.  This test will reject comments with more than 5 links.</span></p>
 						</blockquote>
 					</div>
 				</div><!--.postbox-->

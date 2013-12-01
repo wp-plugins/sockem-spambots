@@ -18,6 +18,7 @@ CAPTCHA fields inhibit both human and robot participation in important kitty-rel
   * Cookies: require basic cookie support, and again, prove the user visited the site before submitting a comment.
   * Honeypot: generic formbots will often populate all form fields with gibberish, so we can assume that if text is added to an invisible field, something robotic is happening!
   * Speed: automated scripts complete comment forms with inhuman speed, thus if submissions happen really quickly, we can assume it is a robot doing the submitting!
+  * Links: reject comments with excessive number of links.
   * Disable trackbacks or pingbacks independently of one another.
 
 == Installation ==
@@ -63,6 +64,9 @@ No. This plugin only concerns itself with regular WordPress comments.
 
 == Changelog ==
 
+= 0.8.0 =
+* Ability to reject comments with excessive number of links;
+
 = 0.7.0 =
 * Ability to exempt authenticated users from tests;
 * Update per-post comment and ping statuses en masse;
@@ -78,6 +82,9 @@ No. This plugin only concerns itself with regular WordPress comments.
 * Sock'Em SPAMbots is born!
 
 == Upgrade Notice ==
+
+= 0.8.0 =
+New test (excessive links).
 
 = 0.7.0 =
 New features and a small bug fix.
