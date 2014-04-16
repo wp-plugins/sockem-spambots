@@ -3,7 +3,7 @@ Contributors: blobfolio
 Donate link: http://www.blobfolio.com/donate.html
 Tags: comment, comment, spam, captcha, junk, trackback, pingback
 Requires at least: 3.6
-Tested up to: 3.8.3
+Tested up to: 3.9
 Stable tag: trunk
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
