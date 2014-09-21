@@ -3,7 +3,7 @@
 Plugin Name: Sock'Em SPAMbots
 Plugin URI: http://wordpress.org/extend/plugins/sockem-spambots/
 Description: A seamless approach to deflecting the vast majority of SPAM comments.
-Version: 0.8.0
+Version: 0.8.1
 Author: Blobfolio, LLC
 Author URI: http://www.blobfolio.com/
 License: GPLv2 or later
@@ -446,7 +446,7 @@ function sockem_comment_form_validation($commentdata){
 		//link test?
 		if($sockem_options['test_links'] === true)
 		{
-			$link_count = (int) preg_match_all('/\<a[^>]+>/i', $commentdata['comment_content'], $tmp);
+			$link_count = sockem_count_links($commentdata['comment_content']);
 			if($link_count > $sockem_options['test_links_max'])
 			{
 				$debug[] = "[FAIL] Comment contains excessive links ($link_count).";
@@ -488,6 +488,28 @@ function sockem_comment_form_validation($commentdata){
 }
 if(!is_admin())
 	add_filter('preprocess_comment', 'sockem_comment_form_validation', 1);
+
+
+
+//-------------------------------------------------
+// Count the number of links and link-like things
+//
+// @param content
+// @return count
+function sockem_count_links($text){
+	$count = 0;
+
+	//use wordpress' function to make things clickable
+	$text = make_clickable($text);
+
+	//now count actual anchors
+	$count += (int) preg_match_all('/\<a\s[^>]+>/ui', $text, $tmp);
+
+	//also look for fake [url] tags
+	$count += (int) preg_match_all('/\[url[^a-z0-9_-]/ui', $text, $tmp);
+
+	return $count;
+}
 
 //----------------------------------------------------------------------  end comment form modification(s)
 
@@ -570,7 +592,7 @@ function sockem_format_debug_value($v=''){
 	$v = stripslashes($v);
 
 	//sanitize spacing
-	$v = preg_replace('/\s+/', ' ', $v);
+	$v = preg_replace('/\s+/u', ' ', $v);
 
 	//cut long values short
 	if(strlen($v) > 200)
