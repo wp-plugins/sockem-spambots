@@ -59,7 +59,7 @@ function sockem_get_option($option=null, $refresh=false){
 								 'test_speed'=>true,									//test speediness
 								 'test_expiration'=>true,								//test expiration
 								 'test_speed_seconds'=>5,								//the number of seconds before a submission is allowed
-								 'test_expiration_seconds'=>7200,						//the number of seconds a submission is allowed
+								 'test_expiration_seconds'=>14400,						//the number of seconds a submission is allowed
 								 'test_links'=>true,									//test for excessive number of links
 								 'test_links_max'=>5,									//the number of links allowed
 								 'test_length'=>false,									//test comment length
