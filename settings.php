@@ -86,7 +86,7 @@ if(getenv("REQUEST_METHOD") === 'POST')
 		}
 
 		//sanitize the results (there isn't really anything to validate)
-		foreach(array('test_js','test_cookie','test_filler','test_speed','test_links','disable_trackbacks','disable_pingbacks','debug','exempt_users') AS $key)
+		foreach(array('test_length','test_expiration','test_js','test_cookie','test_filler','test_speed','test_links','disable_trackbacks','disable_pingbacks','debug','exempt_users','disable_comment_author_links') AS $key)
 			$sockem_options[$key] = array_key_exists("sockem_$key", $_POST) && intval($_POST["sockem_$key"]) === 1;
 
 		//save for later
@@ -213,17 +213,26 @@ if(is_plugin_active('buddypress/bp-loader.php'))
 							<p><label for="sockem_test_speed"><input type="checkbox" name="sockem_test_speed" id="sockem_test_speed" value="1" <?php echo ($sockem_options['test_speed'] === true ? 'checked=checked' : ''); ?> /> Haste Makes SPAM</label><br>
 							<span class="description">Human beings will take a few seconds, at the very least, to fill out and submit a comment form.  This test will reject comments submitted in 5 seconds or less from the time the page was generated.</span></p>
 
+							<p><label for="sockem_test_expiration"><input type="checkbox" name="sockem_test_expiration" id="sockem_test_expiration" value="1" <?php echo ($sockem_options['test_expiration'] === true ? 'checked=checked' : ''); ?> /> Nothing Lasts Forever</label><br>
+							<span class="description">This test adds an expiration to comment forms so the values cannot be indefinitely resubmitted by SPAMbots. Don't worry, even your slowest readers should have no trouble digesting the content within the four-hour window.</span></p>
+
 							<p><label for="sockem_test_links"><input type="checkbox" name="sockem_test_links" id="sockem_test_links" value="1" <?php echo ($sockem_options['test_links'] === true ? 'checked=checked' : ''); ?> /> Excessive Links</label><br>
 							<span class="description">SPAM comments frequently contain a gratuitous number of links.  This test will reject comments with more than 5 links.</span></p>
+
+							<p><label for="sockem_test_length"><input type="checkbox" name="sockem_test_length" id="sockem_test_length" value="1" <?php echo ($sockem_options['test_length'] === true ? 'checked=checked' : ''); ?> /> Short and Sweet</label><br>
+							<span class="description">Comments should not be novels. This test rejects comments longer than 1500 characters.</span></p>
 						</blockquote>
 					</div>
 				</div><!--.postbox-->
 
 				<!-- comment validation methods -->
 				<div class="postbox">
-					<h3 class="hndle">Automated Comment Features</h3>
+					<h3 class="hndle">Other Comment Features</h3>
 					<div class="inside">
-						<p>Some kinds of comments are actually supposed to come from robots, though their usefulness is questionable.</p>
+						<p><label for="sockem_disable_comment_author_links"><input type="checkbox" name="sockem_disable_comment_author_links" id="sockem_disable_comment_author_links" value="1" <?php echo ($sockem_options['disable_comment_author_links'] === true ? 'checked=checked' : ''); ?> /> Hide Comment Author Link</label><br>
+							<span class="description">The point of SPAM comments is largely to trick human beings into clicking their links.  SPAM links are at best annoying, and at worst dangerous, so unless your visitors expect cross-promotion when they post comments, you shouldn't display them.  This option only disables the <i>display</i> of commenter URLs on the frontend; the data is still collected and retained in case you change your mind.</span></p>
+
+						<p>Some kinds of comments are actually supposed to come from robots, though their usefulness is questionable:</p>
 
 						<blockquote>
 							<p><label for="sockem_disable_trackbacks"><input type="checkbox" name="sockem_disable_trackbacks" id="sockem_disable_trackbacks" value="1" <?php echo ($sockem_options['disable_trackbacks'] === true ? 'checked=checked' : ''); ?> /> Disable Trackbacks</label><br>
@@ -240,7 +249,7 @@ if(is_plugin_active('buddypress/bp-loader.php'))
 		</div><!-- .has-sidebar -->
 
 
-		<p class="submit"><input type="submit" name="submit" value="Save" /></p>
+		<p class="submit"><input type="submit" class="button button-primary" name="submit" value="Save" /></p>
 		</form>
 
 	</div><!-- /metabox-holder has-right-sidebar -->

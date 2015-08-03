@@ -64,6 +64,11 @@ No. This plugin only concerns itself with regular WordPress comments.
 
 == Changelog ==
 
+= 0.9.0 =
+* Added form expiration test;
+* Added max comment
+* Ability to disable comment author links;
+
 = 0.8.1 =
 * Enahnced link counting to include [url] tags and plaintext URLs;
 
@@ -85,6 +90,9 @@ No. This plugin only concerns itself with regular WordPress comments.
 * Sock'Em SPAMbots is born!
 
 == Upgrade Notice ==
+
+= 0.9.0 =
+Added form expiration test, max length restriction, and ability to disable comment author links.
 
 = 0.8.1 =
 Link counts now include [url] tags and plaintext URLs.

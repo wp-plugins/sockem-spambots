@@ -3,7 +3,7 @@
 Plugin Name: Sock'Em SPAMbots
 Plugin URI: http://wordpress.org/extend/plugins/sockem-spambots/
 Description: A seamless approach to deflecting the vast majority of SPAM comments.
-Version: 0.8.1
+Version: 0.9.0
 Author: Blobfolio, LLC
 Author URI: http://www.blobfolio.com/
 License: GPLv2 or later
@@ -57,10 +57,15 @@ function sockem_get_option($option=null, $refresh=false){
 								 'test_cookie'=>true,									//require cookie support to submit comment
 								 'test_filler'=>true,									//require leaving this field empty to submit comment
 								 'test_speed'=>true,									//test speediness
-								 'test_speed_seconds'=>5,								//the number of seconds to use for submissions
+								 'test_expiration'=>true,								//test expiration
+								 'test_speed_seconds'=>5,								//the number of seconds before a submission is allowed
+								 'test_expiration_seconds'=>7200,						//the number of seconds a submission is allowed
 								 'test_links'=>true,									//test for excessive number of links
 								 'test_links_max'=>5,									//the number of links allowed
+								 'test_length'=>false,									//test comment length
+								 'test_length_max'=>1500,								//maximum comment length
 								 'exempt_users'=>true,									//exempt logged-in users from tests
+								 'disable_comment_author_links'=>false,					//disable comment author links
 								 'salt'=>sockem_make_salt(),							//a salt used to make hashes less predictable one site to the next
 								 'algo'=>'sha512',										//the hasing algorithm to use
 								 'disable_trackbacks'=>true,							//whether to disable trackback support
@@ -217,8 +222,9 @@ function sockem_make_speed_hash($timestamp=0){
 // @since 0.6.0
 //
 // @param hash
+// @param mode (speed or expiration)
 // @return true/false
-function sockem_validate_speed_hash($hash=''){
+function sockem_validate_speed_hash($hash='', $mode='speed'){
 
 	$sockem_options = sockem_get_option();
 
@@ -234,7 +240,10 @@ function sockem_validate_speed_hash($hash=''){
 		return false;
 
 	//now we pass or fail depending on how much time has elapsed
-	return current_time('timestamp') - $hash_time > $sockem_options['test_speed_seconds'];
+	if($mode === 'speed')
+		return current_time('timestamp') - $hash_time > $sockem_options['test_speed_seconds'];
+	else
+		return current_time('timestamp') - $hash_time < $sockem_options['test_expiration_seconds'];
 }
 
 //----------------------------------------------------------------------  end variables
@@ -325,6 +334,10 @@ function sockem_comment_form($post_id=0){
 	//speed test?
 	if($sockem_options['test_speed'] === true)
 		echo "\n" . '<input type="hidden" name="sockem_speed" value="' . esc_attr(sockem_make_speed_hash()) . '" />';
+
+	//expiration
+	if($sockem_options['test_expiration'] === true)
+		echo "\n" . '<input type="hidden" name="sockem_expiration" value="' . esc_attr(sockem_make_speed_hash()) . '" />';
 
 	//echo the modifications, if any
 	echo ob_get_clean();
@@ -443,6 +456,20 @@ function sockem_comment_form_validation($commentdata){
 		else
 			$debug[] = '[N/A] Comment speed is not tested.';
 
+		//expiration test?
+		if($sockem_options['test_expiration'] === true)
+		{
+			if(!array_key_exists('sockem_expiration', $_POST) || !sockem_validate_speed_hash($_POST['sockem_expiration'], 'expiration'))
+			{
+				$debug[] = '[FAIL] Comment form has expired.';
+				$errors[] = 'The comment form expired. Please reload the post and try again.';
+			}
+			else
+				$debug[] = '[PASS] Comment form has not expired.';
+		}
+		else
+			$debug[] = '[N/A] Comment expiration is not tested.';
+
 		//link test?
 		if($sockem_options['test_links'] === true)
 		{
@@ -457,6 +484,21 @@ function sockem_comment_form_validation($commentdata){
 		}
 		else
 			$debug[] = '[N/A] Comment link count is not tested.';
+
+		//length?
+		if($sockem_options['test_length'] === true)
+		{
+			$comment_length = (int) strlen($commentdata['comment_content']);
+			if($comment_length > $sockem_options['test_length_max'])
+			{
+				$debug[] = "[FAIL] Comment is too long ($comment_length).";
+				$errors[] = "Comments cannot exceed {$sockem_options['test_length_max']} characters in length.";
+			}
+			else
+				$debug[] = "[PASS] Comment was not too long ($comment_length).";
+		}
+		else
+			$debug[] = '[N/A] Comment length is not tested.';
 
 	}//end regular comments
 	//trackbacks?
@@ -510,6 +552,17 @@ function sockem_count_links($text){
 
 	return $count;
 }
+
+//-------------------------------------------------
+// Disable comment author links?
+//
+// @since 0.9.0
+//
+// @param link
+// @return link
+function sockem_disable_comment_author_link( $author_link ){ return strip_tags( $author_link ); }
+if(sockem_get_option('disable_comment_author_links') === true)
+	add_filter( 'get_comment_author_link', 'sockem_disable_comment_author_link' );
 
 //----------------------------------------------------------------------  end comment form modification(s)
 
